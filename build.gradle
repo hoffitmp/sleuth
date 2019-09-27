@@ -3,6 +3,11 @@ import org.gradle.internal.logging.text.StyledTextOutputFactory
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 
 buildscript {
+	ext {
+		set('springVersion', '2.2.0.M6')
+		set('springCloudVersion', 'Hoxton.M2') //'Greenwich.SR3')//'Hoxton.M2')
+        set('springSleuthVersion', '2.2.0.BUILD-SNAPSHOT');
+	}
     repositories {
         mavenLocal()
         jcenter()
@@ -13,7 +18,7 @@ buildscript {
         maven { url 'https://repo.spring.io/libs-snapshot-local' } // only if using snapshot spring stuff
     }
     dependencies {
-        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.2.0.M6" // only if using milestones, otherwise in plugins { } section
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:${springVersion}" // only if using milestones, otherwise in plugins { } section
     }
 }
 plugins {
@@ -35,13 +40,13 @@ repositories {
 	maven { url 'https://repo.spring.io/libs-snapshot' } // only if using snapshot spring stuff
 }
 
-ext {
-	set('springCloudVersion', "Hoxton.M2") //"Greenwich.SR3")//"Hoxton.M2")
-}
-
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-sleuth' // zipkin'
+
+    implementation "io.zipkin.brave:brave:5.7.0"
+    implementation "io.zipkin.brave:brave-instrumentation-http:5.7.0"
+	implementation 'org.springframework.cloud:spring-cloud-sleuth-core'+":${springSleuthVersion}" // zipkin'
+	implementation 'org.springframework.cloud:spring-cloud-starter-sleuth'+":${springSleuthVersion}" // zipkin'
 
 
 	testImplementation('org.springframework.boot:spring-boot-starter-test') {

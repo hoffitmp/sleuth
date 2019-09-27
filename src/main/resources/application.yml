@@ -1,5 +1,10 @@
+logging:
+  pattern:
+    level: "%5p [${spring.zipkin.service.name:${spring.application.name:-}},%X{X-B3-TraceId:-},%X{X-B3-SpanId:-},%X{X-Span-Export:-}] [%X{ddd:-},%X{bp:-},%X{bpids:-}] [%X{op:-},%X{chunk:-},%X{i:-}]\n"
 
 spring:
+  application:
+    name: PROFILENOTSET
   #main:
   #  allow-bean-definition-overriding: true
   jmx:
@@ -33,3 +38,24 @@ spring:
         - op
         - chunk
         - i
+
+---
+
+spring:
+  profiles: sender
+  application:
+    name: sender
+
+server:
+  port: 8080
+
+---
+
+spring:
+  profiles: receiver
+  application:
+    name: receiver
+
+server:
+  port: 8081
+ 
