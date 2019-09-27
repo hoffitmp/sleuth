@@ -2,7 +2,6 @@ package com.example.demo;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.slf4j.MDC;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.context.annotation.Bean;
@@ -83,14 +82,9 @@ public class Sender {
                 rootSpan.annotate("Exception in rootSpan: " + t.getMessage());
                 throw t;
         } finally {
-            // would expect local-keys: baggage to be the ones set on rootSpan again, but are empty
             log.info("rootSpan finishing...");
             rootSpan.finish();
             log.info("rootSpan finished");
-            MDC.remove(BAGGAGEKEY.BUSINESS_PROCESS_IDS.toString());
-            MDC.remove(BAGGAGEKEY.BUSINESS_DOMAIN.toString());
-            MDC.remove(BAGGAGEKEY.BUSINESS_PROCESS_NAME.toString());
-
         }
 
         log.info(String.format("END /send %s", ""));
