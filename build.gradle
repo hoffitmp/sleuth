@@ -2,17 +2,32 @@ import org.gradle.internal.logging.text.StyledTextOutput
 import org.gradle.internal.logging.text.StyledTextOutputFactory
 import org.gradle.internal.logging.text.StyledTextOutput.Style
 
+buildscript {
+    repositories {
+        mavenLocal()
+        jcenter()
+        maven { url 'http://repo.spring.io/plugins-release' }
+        maven { url 'https://repo.jenkins-ci.org/public/' } // only if using buildfiles/buildJenkins.gradle
+        maven { url 'https://repo.spring.io/libs-milestone' } // only if using milestone spring stuff
+        maven { url 'https://repo.spring.io/libs-snapshot' } // only if using snapshot spring stuff
+        maven { url 'https://repo.spring.io/libs-snapshot-local' } // only if using snapshot spring stuff
+    }
+    dependencies {
+        classpath "org.springframework.boot:spring-boot-gradle-plugin:2.2.0.M6" // only if using milestones, otherwise in plugins { } section
+    }
+}
 plugins {
-	id 'org.springframework.boot' version '2.1.8.RELEASE'
+//	id 'org.springframework.boot' version '2.2.0.M6'
 	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
 	id 'java'
 }
+apply plugin: 'org.springframework.boot' // only if using milestones, otherwise in plugins { } section
 
 group = 'com.example'
 ext.group = 'group'
 version = '0.0.1-SNAPSHOT'
 ext.version = version
-sourceCompatibility = '1.8' //JavaVersion.VERSION_11
+sourceCompatibility = JavaVersion.VERSION_11
 
 repositories {
 	jcenter()
@@ -21,15 +36,17 @@ repositories {
 }
 
 ext {
-	set('springCloudVersion', "Hoxton.M2")//"Greenwich.SR3")//"Hoxton.M2")
+	set('springCloudVersion', "Hoxton.M2") //"Greenwich.SR3")//"Hoxton.M2")
 }
 
 dependencies {
 	implementation 'org.springframework.boot:spring-boot-starter-web'
-	implementation 'org.springframework.cloud:spring-cloud-starter-zipkin'
+	implementation 'org.springframework.cloud:spring-cloud-starter-sleuth' // zipkin'
 
 
-	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+	testImplementation('org.springframework.boot:spring-boot-starter-test') {
+        exclude group: 'org.junit.vintage', module: 'junit-vintage-engine'
+    }
     testImplementation("org.junit.jupiter:junit-jupiter-api")
     testImplementation("org.junit.jupiter:junit-jupiter-params")
     testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
@@ -59,7 +76,7 @@ test {
     reports.html.enabled = false
 
     testLogging {
-        showStandardStreams = false
+        showStandardStreams = true
         exceptionFormat = 'full'
         events "PASSED", "FAILED", "SKIPPED" //, "STARTED" //, "standardOut", "standardError"
     }
