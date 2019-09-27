@@ -1,0 +1,96 @@
+import org.gradle.internal.logging.text.StyledTextOutput 
+import org.gradle.internal.logging.text.StyledTextOutputFactory
+import org.gradle.internal.logging.text.StyledTextOutput.Style
+
+plugins {
+	id 'org.springframework.boot' version '2.1.8.RELEASE'
+	id 'io.spring.dependency-management' version '1.0.8.RELEASE'
+	id 'java'
+}
+
+group = 'com.example'
+ext.group = 'group'
+version = '0.0.1-SNAPSHOT'
+ext.version = version
+sourceCompatibility = '1.8' //JavaVersion.VERSION_11
+
+repositories {
+	jcenter()
+	maven { url "https://repo.spring.io/milestone" } // only if using milestone spring stuff
+	maven { url 'https://repo.spring.io/libs-snapshot' } // only if using snapshot spring stuff
+}
+
+ext {
+	set('springCloudVersion', "Hoxton.M2")//"Greenwich.SR3")//"Hoxton.M2")
+}
+
+dependencies {
+	implementation 'org.springframework.boot:spring-boot-starter-web'
+	implementation 'org.springframework.cloud:spring-cloud-starter-zipkin'
+
+
+	testImplementation 'org.springframework.boot:spring-boot-starter-test'
+    testImplementation("org.junit.jupiter:junit-jupiter-api")
+    testImplementation("org.junit.jupiter:junit-jupiter-params")
+    testRuntimeOnly("org.junit.jupiter:junit-jupiter-engine")
+}
+
+dependencyManagement {
+	imports {
+		mavenBom "org.springframework.cloud:spring-cloud-dependencies:${springCloudVersion}"
+	}
+}
+
+compileJava {
+    // options.compilerArgs += ["--add-modules", "java.xml.bind"]
+    println "Gradle version: " + project.getGradle().getGradleVersion()
+    println "Groovy version: " + GroovySystem.getVersion()
+    println "javac  version: " + org.gradle.internal.jvm.Jvm.current() + ' with compiler args: ' + options.compilerArgs
+    
+}
+
+test {
+    useJUnitPlatform {
+//        includeTags 'fast'
+//        excludeTags 'app', 'integration', 'messaging', 'slow', 'trivial'
+    }
+    failFast = false
+    ignoreFailures true
+    reports.html.enabled = false
+
+    testLogging {
+        showStandardStreams = false
+        exceptionFormat = 'full'
+        events "PASSED", "FAILED", "SKIPPED" //, "STARTED" //, "standardOut", "standardError"
+    }
+
+    beforeTest { descriptor ->
+        logger.lifecycle("Running test: " + descriptor)
+    }
+    // listen to standard out and standard error of the test JVM(s)
+    onOutput { descriptor, event ->
+        // logger.lifecycle("Test: " + descriptor + " produced standard out/err: " + event.message )
+        event.message
+    }
+    afterSuite { desc, result ->
+        if (!desc.parent) { // will match the outermost suite
+            def out = services.get(StyledTextOutputFactory).create("an-ouput")
+            if (result.failedTestCount <= 0) {
+                out.style(Style.Success).println "\nTest Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+            } else {
+                out.style(Style.Failure).println "\nTest Results: ${result.resultType} (${result.testCount} tests, ${result.successfulTestCount} successes, ${result.failedTestCount} failures, ${result.skippedTestCount} skipped)"
+            }
+        }
+    }
+}
+
+task printClasspath(group:project.rootProject.ext.group, description:"print classpath") {
+    dependsOn subprojects.build
+    doLast {
+        // filters only existing and non-empty dirs
+        sourceSets.main.runtimeClasspath
+            .filter { (it.isDirectory() && it.listFiles().length > 0) || it.isFile() }
+            .each{ println it }
+    }
+}
+
